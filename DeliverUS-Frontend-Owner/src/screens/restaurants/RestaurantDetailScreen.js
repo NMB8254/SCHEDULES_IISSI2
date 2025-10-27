@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import React, { useEffect, useState } from 'react'
 import { StyleSheet, View, FlatList, ImageBackground, Image, Pressable } from 'react-native'
 import { showMessage } from 'react-native-flash-message'
@@ -12,15 +11,12 @@ import * as GlobalStyles from '../../styles/GlobalStyles'
 import DeleteModal from '../../components/DeleteModal'
 import defaultProductImage from '../../../assets/product.jpeg'
 import { API_BASE_URL } from '@env'
-
 export default function RestaurantDetailScreen ({ navigation, route }) {
   const [restaurant, setRestaurant] = useState({})
   const [productToBeDeleted, setProductToBeDeleted] = useState(null)
-
   useEffect(() => {
     fetchRestaurantDetail()
   }, [route])
-
   const renderHeader = () => {
     return (
       <View>
@@ -32,7 +28,6 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
             <TextRegular textStyle={styles.description}>{restaurant.restaurantCategory ? restaurant.restaurantCategory.name : ''}</TextRegular>
           </View>
         </ImageBackground>
-
         <Pressable
           onPress={() => navigation.navigate('CreateProductScreen', { id: restaurant.id })
           }
@@ -51,6 +46,8 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
             </TextRegular>
           </View>
         </Pressable>
+
+        {/* SOLUTION */}
         <Pressable
           onPress={() => navigation.navigate('RestaurantSchedulesScreen', { id: restaurant.id })
           }
@@ -72,7 +69,6 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
       </View>
     )
   }
-
   const renderProduct = ({ item }) => {
     return (
       <ImageCard
@@ -81,9 +77,28 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
       >
         <TextRegular numberOfLines={2}>{item.description}</TextRegular>
         <TextSemiBold textStyle={styles.price}>{item.price.toFixed(2)}€</TextSemiBold>
-        {!item.availability &&
-          <TextRegular textStyle={styles.availability }>Not available</TextRegular>
-        }
+        {/* SOLUTION */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {item.schedule
+              ? <>
+                  <MaterialCommunityIcons name="timetable" size={18} color={GlobalStyles.brandGreen} />
+                  <TextRegular textStyle={{ color: GlobalStyles.brandGreen }}>{item.schedule.startTime} - {item.schedule.endTime}</TextRegular>
+              </>
+              : <>
+                <MaterialCommunityIcons name="timetable" size={18} color={GlobalStyles.brandPrimary} />
+                <TextRegular textStyle={{ color: GlobalStyles.brandPrimary }}>Not scheduled</TextRegular>
+              </>
+            }
+          </View>
+          <View>
+            {!item.availability &&
+              <TextRegular textStyle={styles.availability}>Not available</TextRegular>
+            }
+          </View>
+        </View>
+        {/* END SOLUTION */}
+
          <View style={styles.actionButtonsContainer}>
           <Pressable
             onPress={() => navigation.navigate('EditProductScreen', { id: item.id })
@@ -103,7 +118,6 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
             </TextRegular>
           </View>
         </Pressable>
-
         <Pressable
             onPress={() => { setProductToBeDeleted(item) }}
             style={({ pressed }) => [
@@ -125,7 +139,6 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
       </ImageCard>
     )
   }
-
   const renderEmptyProductsList = () => {
     return (
       <TextRegular textStyle={styles.emptyList}>
@@ -133,7 +146,6 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
       </TextRegular>
     )
   }
-
   const fetchRestaurantDetail = async () => {
     try {
       const fetchedRestaurant = await getDetail(route.params.id)
@@ -147,7 +159,6 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
       })
     }
   }
-
   const removeProduct = async (product) => {
     try {
       await remove(product.id)
@@ -170,7 +181,6 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
       })
     }
   }
-
   return (
     <View style={styles.container}>
       <FlatList
@@ -190,7 +200,6 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
     </View>
   )
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1
@@ -244,8 +253,7 @@ const styles = StyleSheet.create({
     marginLeft: 5
   },
   availability: {
-    textAlign: 'right',
-    marginRight: 5,
+    /* SOLUTION */
     color: GlobalStyles.brandSecondary
   },
   actionButton: {

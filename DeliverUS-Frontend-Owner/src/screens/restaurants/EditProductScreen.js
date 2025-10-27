@@ -18,11 +18,15 @@ import { getRestaurantSchedules } from '../../api/RestaurantEndpoints'
 
 export default function EditProductScreen ({ navigation, route }) {
   const [open, setOpen] = useState(false)
+  /* SOLUTION */
+  const [isScheduleDropdownOpen, setIsScheduleDropdownOpen] = useState(false)
   const [productCategories, setProductCategories] = useState([])
   const [backendErrors, setBackendErrors] = useState()
   const [product, setProduct] = useState()
+  /* SOLUTION */
+  const [scheduleOptions, setScheduleOptions] = useState([])
 
-  const [initialProductValues, setInitialProductValues] = useState({ name: null, description: null, price: null, order: null, productCategoryId: null, availability: null, image: null })
+  const [initialProductValues, setInitialProductValues] = useState({ name: null, description: null, price: null, order: null, productCategoryId: null, availability: null, image: null /* SOLUTION */, scheduleId: null })
   const validationSchema = yup.object().shape({
     name: yup
       .string()
@@ -43,7 +47,12 @@ export default function EditProductScreen ({ navigation, route }) {
       .number()
       .positive()
       .integer()
-      .required('Product category is required')
+      .required('Product category is required'), /* SOLUTION */
+    scheduleId: yup
+      .number()
+      .nullable()
+      .optional()
+      .positive()
   })
 
   useEffect(() => {
@@ -68,7 +77,6 @@ export default function EditProductScreen ({ navigation, route }) {
     }
     fetchProductCategories()
   }, [])
-
   useEffect(() => {
     async function fetchProductDetail () {
       try {
@@ -89,6 +97,30 @@ export default function EditProductScreen ({ navigation, route }) {
     fetchProductDetail()
   }, [route])
 
+  /* SOLUTION */
+  useEffect(() => {
+    async function fetchRestaurantSchedules () {
+      try {
+        const fetchedRestaurantSchedules = await getRestaurantSchedules(product.restaurantId)
+        const fetchedRestaurantSchedulesOptions = fetchedRestaurantSchedules.map((schedule) => {
+          return {
+            label: `${schedule.startTime} - ${schedule.endTime}`,
+            value: schedule.id
+          }
+        })
+        setScheduleOptions(fetchedRestaurantSchedulesOptions)
+      } catch (error) {
+        showMessage({
+          message: `There was an error while retrieving restaurant schedules. ${error} `,
+          type: 'error',
+          style: GlobalStyles.flashStyle,
+          titleStyle: GlobalStyles.flashTextStyle
+        })
+      }
+    }
+    if (product) { fetchRestaurantSchedules() }
+  }, [product])
+
   const pickImage = async (onSuccess) => {
     const result = await ExpoImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
@@ -102,7 +134,6 @@ export default function EditProductScreen ({ navigation, route }) {
       }
     }
   }
-
   const updateProduct = async (values) => {
     setBackendErrors([])
     try {
@@ -141,12 +172,10 @@ export default function EditProductScreen ({ navigation, route }) {
                 name='price'
                 label='Price:'
               />
-
               <InputItem
                 name='order'
                 label='Order/position to be rendered:'
               />
-
               <TextRegular textStyle={styles.textLabel}>Product category: </TextRegular>
               <DropDownPicker
                 open={open}
@@ -163,6 +192,26 @@ export default function EditProductScreen ({ navigation, route }) {
                 dropDownStyle={{ backgroundColor: '#fafafa' }}
               />
               <ErrorMessage name={'productCategoryId'} render={msg => <TextError>{msg}</TextError> }/>
+              {/* SOLUTION */}
+              <TextRegular textStyle={styles.textLabel}>Schedule: </TextRegular>
+              <DropDownPicker
+                open={isScheduleDropdownOpen}
+                value={values.scheduleId}
+                items={[
+                  { label: 'Not scheduled', value: null },
+                  ...scheduleOptions
+                ]}
+                setOpen={setIsScheduleDropdownOpen}
+                onSelectItem={item => {
+                  setFieldValue('scheduleId', item.value)
+                }}
+                setItems={setScheduleOptions}
+                placeholder="Not scheduled"
+                containerStyle={{ height: 40, marginBottom: 10 }}
+                style={{ backgroundColor: GlobalStyles.brandBackground }}
+                dropDownStyle={{ backgroundColor: '#fafafa' }}
+              />
+              <ErrorMessage name={'scheduleId'} render={msg => <TextError>{msg}</TextError> }/>
 
               <TextRegular textStyle={styles.textLabel}>Available:</TextRegular>
               <Switch
@@ -176,7 +225,6 @@ export default function EditProductScreen ({ navigation, route }) {
                 }
               />
               <ErrorMessage name={'availability'} render={msg => <TextError>{msg}</TextError> }/>
-
               <Pressable onPress={() =>
                 pickImage(
                   async result => {
@@ -189,11 +237,9 @@ export default function EditProductScreen ({ navigation, route }) {
                 <TextRegular textStyle={styles.label}>Product image: </TextRegular>
                 <Image style={styles.image} source={values.image ? { uri: values.image.assets[0].uri } : defaultProductImage} />
               </Pressable>
-
               {backendErrors &&
                 backendErrors.map((error, index) => <TextError key={index}>{error.param}-{error.msg}</TextError>)
               }
-
               <Pressable
                 onPress={ handleSubmit }
                 style={({ pressed }) => [
@@ -218,7 +264,6 @@ export default function EditProductScreen ({ navigation, route }) {
     </Formik>
   )
 }
-
 const styles = StyleSheet.create({
   button: {
     borderRadius: 8,
@@ -233,7 +278,6 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     marginLeft: 5
-
   },
   imagePicker: {
     height: 40,

@@ -40,7 +40,7 @@ export default function CreateScheduleScreen ({ navigation, route }) {
         style: GlobalStyles.flashStyle,
         titleStyle: GlobalStyles.flashTextStyle
       })
-      navigation.navigate('RestaurantDetailScreen', { id: route.params.id })
+      navigation.navigate('RestaurantDetailScreen', { id: route.params.id, dirty: true })
     } catch (error) {
       console.log(error)
       setBackendErrors(error.errors)
